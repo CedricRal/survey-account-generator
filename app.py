@@ -80,6 +80,14 @@ with st.sidebar:
         help="Exemple : 0013 donnera EQ_APNHW_0013.",
     )
 
+    eq_per_ce = st.number_input(
+        "Nombre d'EQ par CE",
+        min_value=1,
+        value=6,
+        step=1,
+        help="Nombre d'enquêteurs à créer pour chaque chef d'équipe.",
+    )
+
 
 # ---------------------------------------------------------
 # Import du fichier Excel
@@ -154,10 +162,10 @@ if uploaded_file is not None:
         st.metric("Chefs d'équipe", len(df_ce))
 
     with col2:
-        st.metric("Enquêteurs à créer", len(df_ce) * 6)
+        st.metric("Enquêteurs à créer", len(df_ce) * eq_per_ce)
 
     with col3:
-        st.metric("Comptes au total", len(df_ce) * 7)
+        st.metric("Comptes au total", len(df_ce) * (eq_per_ce + 1))
 
     st.divider()
 
@@ -206,6 +214,7 @@ if uploaded_file is not None:
                 mode=mode,
                 start_ce=int(start_ce),
                 start_eq=int(start_eq),
+                eq_per_ce=eq_per_ce,
             )
 
             st.session_state.result_df = result_df
@@ -303,6 +312,57 @@ if st.session_state.generated and st.session_state.result_df is not None:
                 "spreadsheetml.sheet"
             ),
             type="primary",
+            use_container_width=True,
+        )
+
+        comptes_tab_df = result_df[
+            [
+                "login",
+                "password",
+                "role",
+                "supervisor",
+            ]
+        ]
+
+        comptes_tab_data = comptes_tab_df.to_csv(
+            sep="\t",
+            index=False,
+        )
+
+        st.download_button(
+            label="Télécharger comptes.tab",
+            data=comptes_tab_data,
+            file_name="comptes.tab",
+            mime="text/tab-separated-values",
+            use_container_width=True,
+        )
+
+        denombrement_tab_df = result_df.loc[
+            result_df["role"].eq("interviewer"),
+            ["login"],
+        ].copy()
+        denombrement_tab_df["_responsible"] = denombrement_tab_df[
+            "login"
+        ]
+        denombrement_tab_df["_quantity"] = -1
+        denombrement_tab_df = denombrement_tab_df[
+            [
+                "login",
+                "_responsible",
+                "_quantity",
+            ]
+        ]
+
+        denombrement_tab_data = denombrement_tab_df.to_csv(
+            sep="\t",
+            index=False,
+        )
+
+        st.download_button(
+            label="Télécharger denombrement.tab",
+            data=denombrement_tab_data,
+            file_name="denombrement.tab",
+            mime="text/tab-separated-values",
             use_container_width=True,
         )
 

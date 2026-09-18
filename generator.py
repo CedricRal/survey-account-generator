@@ -185,6 +185,7 @@ def generate_accounts(
     mode,
     start_ce,
     start_eq,
+    eq_per_ce=6,
 ):
     """
     Génère les comptes pour chaque ligne du fichier CE.
@@ -192,7 +193,7 @@ def generate_accounts(
     Pour chaque CE :
 
         1 compte supervisor
-        6 comptes interviewer
+        eq_per_ce comptes interviewer
 
     Les informations du CE sont conservées uniquement
     sur la ligne du CE.
@@ -207,6 +208,16 @@ def generate_accounts(
     if mode not in ["formation", "collecte"]:
         raise ValueError(
             "Le mode doit être 'formation' ou 'collecte'."
+        )
+
+    if not isinstance(eq_per_ce, int) or isinstance(eq_per_ce, bool):
+        raise ValueError(
+            "Le nombre d'EQ par CE doit être un nombre entier."
+        )
+
+    if eq_per_ce < 1:
+        raise ValueError(
+            "Le nombre d'EQ par CE doit être supérieur à 0."
         )
 
     sigle = str(sigle).strip().upper()
@@ -319,7 +330,7 @@ def generate_accounts(
         rows.append(ce_row)
 
         # -------------------------------------------------
-        # Création des 6 enquêteurs
+        # Création des enquêteurs demandés
         # -------------------------------------------------
 
         # Colonnes du CE à répéter sur les lignes EQ
@@ -329,7 +340,7 @@ def generate_accounts(
             "AXE_SUPERVISION"
         ]
 
-        for _ in range(6):
+        for _ in range(eq_per_ce):
 
             eq_number_string = f"{eq_number:04d}"
 
